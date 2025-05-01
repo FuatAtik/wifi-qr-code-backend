@@ -6,7 +6,29 @@ import User from '../models/User';
 
 // In-memory storage for demo purposes
 // In production, use a proper database
-const users: User[] = [];
+const users: User[] = [{
+  id: 'admin-1',
+  username: 'admin',
+  password: '$2b$10$8eTmKorHCGgqxXvOeZwqc.YvT3U2hI6WMwTR.qKtLYaGHQEH0.Aqm', // hashed '123123aa'
+  createdAt: new Date().toISOString()
+}];
+
+// Helper function to initialize admin password
+const initializeAdminPassword = async () => {
+  const adminUser = users.find(u => u.username === 'admin');
+  if (!adminUser) {
+    const hashedPassword = await bcrypt.hash('123123aa', 10);
+    users.push({
+      id: 'admin-1',
+      username: 'admin',
+      password: hashedPassword,
+      createdAt: new Date().toISOString()
+    });
+  }
+};
+
+// Initialize admin user
+initializeAdminPassword();
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -85,8 +107,11 @@ export const login = async (req: Request, res: Response) => {
       token,
       user: {
         id: user.id,
-        username: user.username
-      }
+        username: user.username,
+        isAdmin: user.username === 'admin'
+      },
+      success: true,
+      message: 'Login successful'
     });
   } catch (error) {
     console.error('Login error:', error);
