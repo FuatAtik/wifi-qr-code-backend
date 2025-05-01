@@ -1,0 +1,19 @@
+{
+  "name": "cat-care-app",
+  "version": "1.0.0",
+  "description": "Cat Care Management Application",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
