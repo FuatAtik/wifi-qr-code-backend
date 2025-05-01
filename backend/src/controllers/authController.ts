@@ -1,25 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
 import { generateToken } from '../middleware/auth';
 import User from '../models/User';
 
-const usersPath = path.join(__dirname, '../../data/users.json');
-
-// Initialize users file if it doesn't exist
-if (!fs.existsSync(usersPath)) {
-  fs.writeFileSync(usersPath, JSON.stringify([]));
-}
-
-const getUsers = (): User[] => {
-  return JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
-};
-
-const saveUsers = (users: User[]) => {
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-};
+// In-memory storage for demo purposes
+// In production, use a proper database
+const users: User[] = [];
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -29,10 +16,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const users = getUsers();
-    
     // Check if username already exists
-    if (users.some(user => user.username === username)) {
+    if (users.some((user: User) => user.username === username)) {
       return res.status(400).json({ error: 'Username already exists' });
     }
 
@@ -47,9 +32,8 @@ export const register = async (req: Request, res: Response) => {
       createdAt: new Date().toISOString()
     };
 
-    // Save user
+    // Save user to in-memory storage
     users.push(newUser);
-    saveUsers(users);
 
     // Generate token
     const token = generateToken({
@@ -78,7 +62,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const users = getUsers();
+    // Use in-memory users array
     const user = users.find(u => u.username === username);
 
     if (!user) {

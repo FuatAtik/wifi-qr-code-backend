@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
 import qrcode from 'qrcode';
 import QRCode from '../models/QRCode';
 
@@ -12,20 +10,9 @@ interface AuthRequest extends Request {
   };
 }
 
-const qrCodesPath = path.join(__dirname, '../../data/qr-codes.json');
-
-// Initialize qr-codes file if it doesn't exist
-if (!fs.existsSync(qrCodesPath)) {
-  fs.writeFileSync(qrCodesPath, JSON.stringify([]));
-}
-
-const getQRCodes = (): QRCode[] => {
-  return JSON.parse(fs.readFileSync(qrCodesPath, 'utf-8'));
-};
-
-const saveQRCodes = (qrCodes: QRCode[]) => {
-  fs.writeFileSync(qrCodesPath, JSON.stringify(qrCodes, null, 2));
-};
+// In-memory storage for demo purposes
+// In production, use a proper database
+const qrCodes: QRCode[] = [];
 
 export const createQRCode = async (req: AuthRequest, res: Response) => {
   try {
@@ -58,9 +45,7 @@ export const createQRCode = async (req: AuthRequest, res: Response) => {
       createdBy: userId
     };
 
-    const qrCodes = getQRCodes();
     qrCodes.push(newQRCode);
-    saveQRCodes(qrCodes);
 
     res.status(201).json(newQRCode);
   } catch (error) {
@@ -77,7 +62,6 @@ export const getQRCodesByUser = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const qrCodes = getQRCodes();
     const userQRCodes = qrCodes.filter(qr => qr.createdBy === userId);
 
     res.json(userQRCodes);
@@ -96,7 +80,6 @@ export const deleteQRCode = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const qrCodes = getQRCodes();
     const qrCodeIndex = qrCodes.findIndex(qr => qr.id === id && qr.createdBy === userId);
 
     if (qrCodeIndex === -1) {
@@ -104,7 +87,6 @@ export const deleteQRCode = async (req: AuthRequest, res: Response) => {
     }
 
     qrCodes.splice(qrCodeIndex, 1);
-    saveQRCodes(qrCodes);
 
     res.json({ message: 'QR code deleted successfully' });
   } catch (error) {
@@ -127,7 +109,6 @@ export const updateQRCode = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Label, SSID, password, and security type are required' });
     }
 
-    const qrCodes = getQRCodes();
     const qrCodeIndex = qrCodes.findIndex(qr => qr.id === id && qr.createdBy === userId);
 
     if (qrCodeIndex === -1) {
@@ -149,8 +130,6 @@ export const updateQRCode = async (req: AuthRequest, res: Response) => {
       qrCode: qrCodeImage,
       updatedAt: new Date().toISOString()
     };
-
-    saveQRCodes(qrCodes);
 
     res.json(qrCodes[qrCodeIndex]);
   } catch (error) {
