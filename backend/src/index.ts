@@ -21,6 +21,11 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root route for health check
+app.get('/', (req, res) => {
+  res.json({ message: 'WiFi QR Code Backend API is running' });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/qrcodes', qrcodeRoutes);
